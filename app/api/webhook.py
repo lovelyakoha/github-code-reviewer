@@ -7,13 +7,13 @@ router = APIRouter()
 async def webhook_post(request: Request):
     payload = await request.json()
 
-    # 🔥 lecture du header GitHub
+    
     event_type = request.headers.get("X-GitHub-Event")
 
     print("EVENT TYPE :", event_type)
     print("PAYLOAD REÇU :", payload)
 
-    # ✅ appel du service (ordre corrigé)
+    
     result = process_github_event(event_type, payload)
 
     return {
