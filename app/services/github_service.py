@@ -8,10 +8,10 @@ APP_ID = os.getenv("GITHUB_APP_ID")
 
 
 def get_jwt_token():
-    # On lit la clé privée depuis la variable d'environnement
+    # On lit la clé privée et on remet les retours à la ligne
     private_key = os.getenv("GITHUB_PRIVATE_KEY")
+    private_key = private_key.replace("\\n", "\n")
 
-    # On crée un token JWT valable 10 minutes
     payload = {
         "iat": int(time.time()),
         "exp": int(time.time()) + 600,
