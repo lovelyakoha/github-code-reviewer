@@ -5,13 +5,11 @@ import jwt
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 APP_ID = os.getenv("GITHUB_APP_ID")
-PRIVATE_KEY_PATH = os.getenv("GITHUB_PRIVATE_KEY_PATH", "code-review-bot-lovely.2026-03-16.private-key.pem")
 
 
 def get_jwt_token():
-    # On lit la clé privée depuis le fichier .pem
-    with open(PRIVATE_KEY_PATH, "r") as f:
-        private_key = f.read()
+    # On lit la clé privée depuis la variable d'environnement
+    private_key = os.getenv("GITHUB_PRIVATE_KEY")
 
     # On crée un token JWT valable 10 minutes
     payload = {
