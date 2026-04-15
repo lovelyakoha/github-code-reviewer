@@ -13,7 +13,7 @@ L'analyse couvre 3 domaines :
 - *Performance*: boucles inutiles, mauvaise complexité, optimisations possibles
 - *Propreté* : nommage peu clair, code dupliqué, fonctions trop longues
 
-
+ 
 
 Comment ça fonctionne techniquement ?
 
