@@ -3,6 +3,8 @@ import os
 password = "admin123"
 secret_key = "abc123secret"
 
+
+
 def get_user(db, user_id):
     query = "SELECT * FROM users WHERE id = " + user_id
     return query
