@@ -9,6 +9,8 @@ def get_user(db, user_id):
 
 
 
+
+
 def calculer(nombres):
     for i in range(len(nombres)):
         for j in range(len(nombres)):
