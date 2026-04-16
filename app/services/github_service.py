@@ -9,7 +9,8 @@ APP_ID = os.getenv("GITHUB_APP_ID")
 
 def get_jwt_token():
     private_key = os.getenv("GITHUB_PRIVATE_KEY")
-    private_key = private_key.replace("\\n", "\n")
+    if "\\n" in private_key:
+        private_key = private_key.replace("\\n", "\n")
 
     payload = {
         "iat": int(time.time()),
@@ -32,20 +33,21 @@ def get_installation_token(installation_id: int):
     response = requests.post(url, headers=headers)
 
     if response.status_code != 201:
-        print("Erreur lors de la récupération du token d'installation :", response.status_code)
+        print("Erreur lors de la recuperation du token d'installation :", response.status_code)
+        print("Reponse GitHub :", response.text)
         return None
 
     return response.json().get("token")
 
 
 def process_github_event(event_type: str, payload: dict):
-    print("Type d'événement reçu :", event_type)
+    print("Type d'evenement recu :", event_type)
 
     if event_type == "push":
-        print("PUSH détecté, on ne fait rien pour l'instant")
+        print("PUSH detecte, on ne fait rien pour l'instant")
 
     elif event_type == "pull_request":
-        print("PULL REQUEST détectée")
+        print("PULL REQUEST detectee")
 
         action = payload.get("action")
         pr = payload.get("pull_request", {})
@@ -61,6 +63,7 @@ def process_github_event(event_type: str, payload: dict):
         print(f"Titre : {title}")
         print(f"Auteur : {author}")
         print(f"URL : {url}")
+        print(f"Installation ID utilise : {installation_id}")
 
         if action not in ["opened", "synchronize"]:
             return {"status": "ignored"}
@@ -68,13 +71,13 @@ def process_github_event(event_type: str, payload: dict):
         token = get_installation_token(installation_id)
 
         if not token:
-            print("Impossible de récupérer le token d'installation")
+            print("Impossible de recuperer le token d'installation")
             return {"status": "error"}
 
         diff = get_pr_diff(repo_full_name, pr_number, token)
 
         if not diff:
-            print("Aucun diff trouvé, on arrête")
+            print("Aucun diff trouve, on arrete")
             return {"status": "no diff"}
 
         analyse = analyze_with_ai(diff)
@@ -99,7 +102,7 @@ def get_pr_diff(repo_full_name: str, pr_number: int, token: str):
     response = requests.get(url, headers=headers)
 
     if response.status_code != 200:
-        print("Erreur lors de la récupération du diff :", response.status_code)
+        print("Erreur lors de la recuperation du diff :", response.status_code)
         return None
 
     files = response.json()
@@ -114,7 +117,7 @@ def get_pr_diff(repo_full_name: str, pr_number: int, token: str):
 
 
 def analyze_with_ai(diff: str):
-    prompt = f"""Analyse ce code et dis-moi s'il y a des problèmes dans ces 3 domaines :
+    prompt = f"""Analyse ce code et dis-moi s'il y a des problemes dans ces 3 domaines :
 
 1. Securite : mots de passe en dur, donnees sensibles exposees, failles connues
 2. Performance : boucles inutiles, mauvaise complexite, optimisations possibles
@@ -163,6 +166,6 @@ def post_comment(repo_full_name: str, pr_number: int, comment_text: str, token: 
     response = requests.post(url, headers=headers, json={"body": body})
 
     if response.status_code == 201:
-        print("Commentaire posté avec succès")
+        print("Commentaire poste avec succes")
     else:
         print("Erreur lors du post du commentaire :", response.status_code)
