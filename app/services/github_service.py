@@ -57,8 +57,8 @@ def process_github_event(event_type: str, payload: dict):
         url = pr.get("html_url")
         pr_number = pr.get("number")
         repo_full_name = payload.get("repository", {}).get("full_name")
-        installation_id = payload.get("installation", {}).get("id") or 116956499
-
+        installation_id = payload.get("installation", {}).get("id") or 124139049
+        
         print(f"Action : {action}")
         print(f"Titre : {title}")
         print(f"Auteur : {author}")
