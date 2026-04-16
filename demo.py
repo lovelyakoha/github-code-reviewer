@@ -12,6 +12,8 @@ def calculer(nombres):
         for j in range(len(nombres)):
             print(nombres[i] + nombres[j])
 
+
+
 def a(x):
     return x
 
