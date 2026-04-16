@@ -58,7 +58,7 @@ def process_github_event(event_type: str, payload: dict):
         pr_number = pr.get("number")
         repo_full_name = payload.get("repository", {}).get("full_name")
         installation_id = payload.get("installation", {}).get("id") or 124139049
-        
+
         print(f"Action : {action}")
         print(f"Titre : {title}")
         print(f"Auteur : {author}")
@@ -117,16 +117,45 @@ def get_pr_diff(repo_full_name: str, pr_number: int, token: str):
 
 
 def analyze_with_ai(diff: str):
-    prompt = f"""Analyse ce code et dis-moi s'il y a des problemes dans ces 3 domaines :
+    prompt = f"""Tu es un assistant expert en revue de code. Analyse le code ci-dessous et identifie les problemes dans ces 3 domaines.
 
-1. Securite : mots de passe en dur, donnees sensibles exposees, failles connues
-2. Performance : boucles inutiles, mauvaise complexite, optimisations possibles
-3. Proprete : code duplique, nommage peu clair, fonctions trop longues
+Reponds UNIQUEMENT en Markdown valide, avec cette structure exacte :
 
-Pour chaque probleme trouve, precise la ligne et propose une correction.
-Si le code est correct, dis-le simplement.
+## Analyse automatique du code
 
-Voici le code modifie :
+### Securite
+Pour chaque probleme trouve :
+- **Probleme** : description claire du probleme et la ligne concernee
+- **Correction** : explication de la correction
+- **Exemple** :
+```python
+// code corrige ici
+```
+
+### Performance
+Pour chaque probleme trouve :
+- **Probleme** : description claire du probleme et la ligne concernee
+- **Correction** : explication de la correction
+- **Exemple** :
+```python
+// code corrige ici
+```
+
+### Proprete
+Pour chaque probleme trouve :
+- **Probleme** : description claire du probleme et la ligne concernee
+- **Correction** : explication de la correction
+- **Exemple** :
+```python
+// code corrige ici
+```
+
+### Conclusion
+Resume en 1-2 phrases.
+
+Si aucun probleme n'est detecte dans un domaine, ecris : "Aucun probleme detecte."
+
+Voici le code a analyser :
 {diff}"""
 
     url = "https://api.groq.com/openai/v1/chat/completions"
@@ -139,6 +168,7 @@ Voici le code modifie :
     body = {
         "model": "llama-3.3-70b-versatile",
         "messages": [
+            {"role": "system", "content": "Tu es un expert en revue de code. Tu reponds uniquement en Markdown bien structure. Tu n'ajoutes jamais de texte en dehors de la structure demandee."},
             {"role": "user", "content": prompt}
         ]
     }
@@ -161,9 +191,7 @@ def post_comment(repo_full_name: str, pr_number: int, comment_text: str, token: 
         "Accept": "application/vnd.github.v3+json"
     }
 
-    body = f"## Analyse automatique du code\n\n{comment_text}"
-
-    response = requests.post(url, headers=headers, json={"body": body})
+    response = requests.post(url, headers=headers, json={"body": comment_text})
 
     if response.status_code == 201:
         print("Commentaire poste avec succes")
