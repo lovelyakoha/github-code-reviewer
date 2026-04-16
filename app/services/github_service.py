@@ -8,7 +8,6 @@ APP_ID = os.getenv("GITHUB_APP_ID")
 
 
 def get_jwt_token():
-    # On lit la clé privée et on remet les retours à la ligne
     private_key = os.getenv("GITHUB_PRIVATE_KEY")
     private_key = private_key.replace("\\n", "\n")
 
@@ -22,7 +21,6 @@ def get_jwt_token():
 
 
 def get_installation_token(installation_id: int):
-    # On échange le JWT contre un token d'installation
     jwt_token = get_jwt_token()
 
     url = f"https://api.github.com/app/installations/{installation_id}/access_tokens"
@@ -57,35 +55,30 @@ def process_github_event(event_type: str, payload: dict):
         url = pr.get("html_url")
         pr_number = pr.get("number")
         repo_full_name = payload.get("repository", {}).get("full_name")
-        installation_id = payload.get("installation", {}).get("id")
+        installation_id = payload.get("installation", {}).get("id") or 116956499
 
         print(f"Action : {action}")
         print(f"Titre : {title}")
         print(f"Auteur : {author}")
         print(f"URL : {url}")
 
-        # On analyse seulement quand la PR est ouverte ou mise à jour
         if action not in ["opened", "synchronize"]:
             return {"status": "ignored"}
 
-        # On récupère le token d'installation pour ce repo
         token = get_installation_token(installation_id)
 
         if not token:
             print("Impossible de récupérer le token d'installation")
             return {"status": "error"}
 
-        # On récupère les fichiers modifiés dans la PR
         diff = get_pr_diff(repo_full_name, pr_number, token)
 
         if not diff:
             print("Aucun diff trouvé, on arrête")
             return {"status": "no diff"}
 
-        # On envoie le diff à Groq pour analyse
         analyse = analyze_with_ai(diff)
 
-        # On poste le résultat comme commentaire sur la PR
         post_comment(repo_full_name, pr_number, analyse, token)
 
         return {
@@ -98,7 +91,6 @@ def process_github_event(event_type: str, payload: dict):
 
 
 def get_pr_diff(repo_full_name: str, pr_number: int, token: str):
-    # On appelle l'API GitHub pour avoir la liste des fichiers modifiés
     url = f"https://api.github.com/repos/{repo_full_name}/pulls/{pr_number}/files"
     headers = {
         "Authorization": f"Bearer {token}",
@@ -116,15 +108,12 @@ def get_pr_diff(repo_full_name: str, pr_number: int, token: str):
     for file in files:
         filename = file.get("filename")
         patch = file.get("patch", "")
-
-        # patch contient les lignes ajoutées/supprimées
         diff_text += f"\n\nFichier : {filename}\n{patch}"
 
     return diff_text
 
 
 def analyze_with_ai(diff: str):
-    # On prépare le prompt qu'on envoie à Groq
     prompt = f"""Analyse ce code et dis-moi s'il y a des problèmes dans ces 3 domaines :
 
 1. Securite : mots de passe en dur, donnees sensibles exposees, failles connues
@@ -137,16 +126,13 @@ Si le code est correct, dis-le simplement.
 Voici le code modifie :
 {diff}"""
 
-    # URL de l'API Groq
     url = "https://api.groq.com/openai/v1/chat/completions"
 
-    # Headers avec la clé Groq
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",
         "Content-Type": "application/json"
     }
 
-    # On formate la requête comme Groq l'attend
     body = {
         "model": "llama-3.3-70b-versatile",
         "messages": [
@@ -161,13 +147,10 @@ Voici le code modifie :
         return "Erreur lors de l'analyse du code."
 
     data = response.json()
-
-    # On récupère le texte dans la réponse de Groq
     return data["choices"][0]["message"]["content"]
 
 
 def post_comment(repo_full_name: str, pr_number: int, comment_text: str, token: str):
-    # On poste un commentaire sur la PR via l'API GitHub
     url = f"https://api.github.com/repos/{repo_full_name}/issues/{pr_number}/comments"
 
     headers = {
